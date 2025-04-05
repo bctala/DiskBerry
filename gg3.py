@@ -22,6 +22,8 @@ class DiskberryApp(tk.Tk):
 
         container = tk.Frame(self, bg=BG_COLOR)
         container.pack(fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
 
         for F in (SplashScreen, CaseManagementPage, DeviceSelectionPage, AcquisitionOptionsPage,
                   AcquisitionProgressPage, AcquisitionCompletePage):
@@ -33,16 +35,23 @@ class DiskberryApp(tk.Tk):
 
     def show_frame(self, cont):
         frame = self.frames[cont]
-        frame.tkraise()
+        frame.tkraise()  # Raise the frame
         self.update_idletasks()  # Force a refresh
         print(f"Raised frame: {cont.__name__}")  # Debugging output
         print(f"Frame visibility: {frame.winfo_ismapped()}")  # Check if the frame is visible
+        print(f"Frame geometry: {frame.winfo_geometry()}")  # Debugging output for geometry
 
 class BasePage(tk.Frame):
     def __init__(self, parent, controller, title):
         super().__init__(parent, bg=BG_COLOR)
+        
+        # Debugging output
+        print(f"Initializing BasePage: {title}")
+        print(f"Parent geometry: {parent.winfo_geometry()}")
+
+        # Center the container in the middle of the screen
         container = tk.Frame(self, bg=CONTAINER_COLOR, bd=2, relief="ridge")
-        container.pack(fill="both", expand=True)  # Use pack instead of place
+        container.place(relx=0.5, rely=0.5, anchor="center")  # Center the container
 
         self.container = container
         tk.Label(container, text=title, font=("Arial", 24), fg=TEXT_COLOR, bg=CONTAINER_COLOR).pack(pady=10)
