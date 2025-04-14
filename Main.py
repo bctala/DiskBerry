@@ -90,9 +90,22 @@ class CaseManagementPage(BasePage):
             entry = tk.Entry(frame, width=40)
             entry.pack(side="left")
             self.entries[label] = entry
+
+        self.error_label = tk.Label(self.container, text="", fg=HIGHLIGHT_COLOR, bg=CONTAINER_COLOR)
+        self.error_label.pack(pady=5)
+
         tk.Button(self.container, text="Next", bg=ACCENT_COLOR,
-                  command=lambda: controller.show_frame(DeviceSelectionPage)).pack(pady=10)
-        print(f"CaseManagementPage widgets: {[child.winfo_class() for child in self.container.winfo_children()]}")
+                  command=lambda: self.validate_and_proceed(controller)).pack(pady=10)
+
+    def validate_and_proceed(self, controller):
+        case_id = self.entries["Case ID"].get().strip()
+        investigator_name = self.entries["Investigator Name"].get().strip()
+
+        if not case_id or not investigator_name:
+            self.error_label.config(text="Error: Case ID and Investigator Name are required.")
+        else:
+            self.error_label.config(text="")  # Clear any previous error message
+            controller.show_frame(DeviceSelectionPage)
 
 class DeviceSelectionPage(BasePage):
     def __init__(self, parent, controller):
@@ -114,7 +127,6 @@ class AcquisitionOptionsPage(BasePage):
         super().__init__(parent, controller, "Acquisition Options")
 
         options = [
-            ("Imaging Method", ["dd", "dcfldd"]),
             ("Output Format", ["Raw", "EWF", "AFF"]),
             ("Hashing Algorithm", ["SHA-256", "MD5"]),
         ]
@@ -129,6 +141,14 @@ class AcquisitionOptionsPage(BasePage):
             tk.OptionMenu(frame, var, *choices).pack(side="left")
             self.option_vars[label] = var
 
+        # Add Block Size selection
+        block_size_frame = tk.Frame(self.container, bg=CONTAINER_COLOR)
+        block_size_frame.pack(pady=5)
+        tk.Label(block_size_frame, text="Block Size:", fg=TEXT_COLOR, bg=CONTAINER_COLOR, width=20, anchor="w").pack(side="left")
+        self.block_size_var = tk.StringVar()
+        self.block_size_var.set("1M")  # Default value
+        tk.OptionMenu(block_size_frame, self.block_size_var, "1M", "2M", "4M", "8M", "16M").pack(side="left")
+
         path_frame = tk.Frame(self.container, bg=CONTAINER_COLOR)
         path_frame.pack(pady=5)
         tk.Label(path_frame, text="Save Path:", fg=TEXT_COLOR, bg=CONTAINER_COLOR, width=20, anchor="w").pack(side="left")
@@ -136,9 +156,7 @@ class AcquisitionOptionsPage(BasePage):
         self.path_entry.pack(side="left")
         tk.Button(path_frame, text="Browse", command=self.browse_path).pack(side="left")
 
-        self.threading_var = tk.IntVar()
         self.bad_sectors_var = tk.IntVar()
-        tk.Checkbutton(self.container, text="Threading", variable=self.threading_var, bg=CONTAINER_COLOR, fg=TEXT_COLOR).pack()
         tk.Checkbutton(self.container, text="Handle Bad Sectors", variable=self.bad_sectors_var, bg=CONTAINER_COLOR, fg=TEXT_COLOR).pack()
 
         tk.Button(self.container, text="Next", bg=ACCENT_COLOR,
@@ -167,7 +185,7 @@ class AcquisitionProgressPage(BasePage):
 class AcquisitionCompletePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller, "Acquisition Complete")
-        tk.Label(self.container, text="An image has been acquired and the report has been successfully generated in a JSON format.",
+        tk.Label(self.container, text="An image has been acquired and the report has been successfully generated in a HTML format.",
                  wraplength=600, justify="center", bg=CONTAINER_COLOR, fg=TEXT_COLOR).pack(pady=20)
         tk.Button(self.container, text="Return to Main Menu", bg=ACCENT_COLOR,
                 command=lambda: controller.show_frame(SplashScreen)).pack(pady=10)
